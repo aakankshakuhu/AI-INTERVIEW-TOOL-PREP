@@ -48,7 +48,7 @@ class InterviewSession:
         record = {
             "question_id": question_id,
             "topic": topic,
-            "score": result["similarity_score"],
+            "similarity_score": result["similarity_score"],
             "label": result["label"],
             "suggestion": result["feedback"]
         }
