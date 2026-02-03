@@ -32,5 +32,20 @@ for i in range(3):
 print("\nAll responses stored:")
 print(session.get_all_responses())
 
+from app.evaluator import PerformanceAnalyzer
+
+evaluation_results = session.get_all_responses()
+
+analyzer = PerformanceAnalyzer(evaluation_results)
+report = analyzer.generate_report()
+
+print("\nInterview Performance Summary")
+print("-----------------------------")
+print("Overall Score:", report["overall_score"])
+print("Topic-wise Scores:", report["topic_scores"])
+print("Strengths:", report["classification"]["strong"])
+print("Weak Topics:", report["classification"]["weak"])
+
+
 
 

@@ -60,6 +60,7 @@ def evaluate_response(question_id: str, user_answer: str) -> dict:
     if row.empty:
         return {"error": "Invalid question ID"}
 
+    topic = row.iloc[0]["topic"]
     ideal_answer = row.iloc[0]["ideal_answer"]
 
     # Compute similarity
@@ -70,6 +71,7 @@ def evaluate_response(question_id: str, user_answer: str) -> dict:
 
     return {
         "question_id": question_id,
+        "topic": topic,
         "similarity_score": round(similarity, 3),
         "label": evaluation["label"],
         "feedback": evaluation["feedback"]
@@ -80,3 +82,75 @@ def run_evaluation(question_id: str, user_answer: str) -> dict:
     Entry-point function for session manager / UI.
     """
     return evaluate_response(question_id, user_answer)
+
+class PerformanceAnalyzer:
+    def __init__(self, evaluation_results):
+        """
+        evaluation_results: list of dicts
+        [
+            {
+                "question": "...",
+                "topic": "SQL",
+                "similarity_score": 0.72
+            }
+        ]
+        """
+        self.evaluation_results = evaluation_results
+
+    def topic_wise_scores(self):
+        topic_scores = {}
+
+        for result in self.evaluation_results:
+            topic = result["topic"]
+            score = result["similarity_score"]
+
+            if topic not in topic_scores:
+                topic_scores[topic] = []
+
+            topic_scores[topic].append(score)
+
+        # Convert to percentage
+        for topic in topic_scores:
+            avg_score = sum(topic_scores[topic]) / len(topic_scores[topic])
+            topic_scores[topic] = round(avg_score * 100, 2)
+
+        return topic_scores
+
+    def classify_topics(self, topic_scores):
+        strengths = []
+        weaknesses = []
+        average = []
+
+        for topic, score in topic_scores.items():
+            if score >= 75:
+                strengths.append(topic)
+            elif score >= 50:
+                average.append(topic)
+            else:
+                weaknesses.append(topic)
+
+        return {
+            "strong": strengths,
+            "average": average,
+            "weak": weaknesses
+        }
+
+    def overall_score(self, topic_scores):
+        if not topic_scores:
+            return 0
+
+        return round(
+            sum(topic_scores.values()) / len(topic_scores), 2
+        )
+
+    def generate_report(self):
+        topic_scores = self.topic_wise_scores()
+        classification = self.classify_topics(topic_scores)
+        overall = self.overall_score(topic_scores)
+
+        return {
+            "overall_score": overall,
+            "topic_scores": topic_scores,
+            "classification": classification
+        }
+
