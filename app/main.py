@@ -47,5 +47,23 @@ print("Strengths:", report["classification"]["strong"])
 print("Weak Topics:", report["classification"]["weak"])
 
 
+from app.feedback import FeedbackGenerator
+
+feedback_gen = FeedbackGenerator(report)
+feedback = feedback_gen.generate_feedback()
+
+print("\nInterview Feedback")
+print("------------------")
+print("Overall:", feedback["overall_feedback"])
+
+print("\nTopic-wise Feedback:")
+for topic, fb in feedback["topic_feedback"].items():
+    print(f"- {topic}: {fb}")
+
+print("\nImprovement Plan:")
+print(feedback["improvement_plan"])
+
+
+
 
 
