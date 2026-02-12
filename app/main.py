@@ -63,6 +63,13 @@ for topic, fb in feedback["topic_feedback"].items():
 print("\nImprovement Plan:")
 print(feedback["improvement_plan"])
 
+print("\nRecommended Resources:")
+for topic, details in feedback["resources"].items():
+    print(f"\n{topic}:")
+    print("  Focus Areas:", details["focus"])
+    print("  Practice Strategy:", details["practice"])
+    print("  Suggested Tools:", details["tools"])
+
 
 
 
