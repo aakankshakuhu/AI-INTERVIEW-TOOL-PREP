@@ -75,6 +75,12 @@ print("--------------------")
 print("Level:", feedback["readiness"]["level"])
 print("Description:", feedback["readiness"]["description"])
 
+print("\nConfidence Analysis")
+print("-------------------")
+print("Confidence Score:", feedback["confidence_score"])
+print("Confidence Insight:", feedback["confidence_feedback"])
+
+
 
 
 
