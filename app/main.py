@@ -70,6 +70,12 @@ for topic, details in feedback["resources"].items():
     print("  Practice Strategy:", details["practice"])
     print("  Suggested Tools:", details["tools"])
 
+print("\nReadiness Assessment")
+print("--------------------")
+print("Level:", feedback["readiness"]["level"])
+print("Description:", feedback["readiness"]["description"])
+
+
 
 
 
