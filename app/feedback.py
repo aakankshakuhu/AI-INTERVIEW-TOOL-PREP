@@ -107,14 +107,28 @@ class FeedbackGenerator:
                 "description": "Significant conceptual gaps detected. Focus on core fundamentals before progressing."
             }
     
+    
+    def confidence_feedback(self):
+        confidence = self.report["confidence_score"]
+
+        if confidence >= 75:
+            return "Your performance is consistent across topics, indicating stable understanding."
+        elif confidence >= 50:
+            return "Your performance shows moderate variation across topics."
+        else:
+            return "Your performance is inconsistent across topics. Strengthen weak areas for stability."
+        
     def generate_feedback(self):
         return {
             "overall_feedback": self.overall_feedback(),
             "topic_feedback": self.topic_feedback(),
             "improvement_plan": self.improvement_plan(),
             "resources": self.resource_recommendations(),
-            "readiness": self.readiness_level()
+            "readiness": self.readiness_level(),
+            "confidence_score": self.report["confidence_score"],
+            "confidence_feedback": self.confidence_feedback()
         }
+
 
 
 
