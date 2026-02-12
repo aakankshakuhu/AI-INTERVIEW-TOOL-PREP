@@ -4,6 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from utils.text_preprocessing import clean_text
 import pandas as pd
 from pathlib import Path
+import math
 
 def compute_similarity(user_answer: str, ideal_answer: str) -> float:
     """
@@ -143,14 +144,34 @@ class PerformanceAnalyzer:
             sum(topic_scores.values()) / len(topic_scores), 2
         )
 
+
+    def confidence_score(self, topic_scores):
+        scores = list(topic_scores.values())
+
+        if len(scores) <= 1:
+            return 100.0  # single topic → fully stable
+
+        mean = sum(scores) / len(scores)
+
+        variance = sum((x - mean) ** 2 for x in scores) / len(scores)
+        std_dev = math.sqrt(variance)
+
+        # Normalize confidence (cap effect)
+        confidence = max(0, 100 - std_dev)
+
+        return round(confidence, 2)
+    
     def generate_report(self):
         topic_scores = self.topic_wise_scores()
         classification = self.classify_topics(topic_scores)
         overall = self.overall_score(topic_scores)
+        confidence = self.confidence_score(topic_scores)
 
         return {
             "overall_score": overall,
             "topic_scores": topic_scores,
-            "classification": classification
+            "classification": classification,
+            "confidence_score": confidence
         }
+
 
