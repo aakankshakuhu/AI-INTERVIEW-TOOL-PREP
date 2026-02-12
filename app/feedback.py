@@ -43,9 +43,55 @@ class FeedbackGenerator:
 
         return plan
 
+    
+    RESOURCE_LIBRARY = {
+        "SQL": {
+            "focus": "Aggregation, window functions, indexing, query optimization",
+            "practice": "Solve advanced GROUP BY and ranking problems",
+            "tools": "Practice on LeetCode SQL section or Mode Analytics"
+        },
+        "Machine Learning": {
+            "focus": "Bias-variance tradeoff, overfitting, regularization, cross-validation",
+            "practice": "Explain models conceptually before implementation",
+            "tools": "Revise sklearn implementations and experiment with hyperparameters"
+        },
+        "Python / Data Handling": {
+            "focus": "Pandas optimization, vectorization, memory management",
+            "practice": "Work with large datasets and profile execution time",
+            "tools": "Practice NumPy broadcasting and Pandas groupby operations"
+        },
+        "System Design Basics": {
+            "focus": "High-level architecture, scalability, data pipelines",
+            "practice": "Draw system diagrams for simple problems",
+            "tools": "Study basic components like load balancers, queues, storage systems"
+        },
+        "Operating Systems": {
+            "focus": "Process management, memory, scheduling",
+            "practice": "Explain concepts like deadlock and paging",
+            "tools": "Revise OS fundamentals and system-level trade-offs"
+        }
+    }
+
+    def resource_recommendations(self):
+        recommendations = {}
+        weak_topics = self.report["classification"]["weak"]
+
+        for topic in weak_topics:
+            if topic in self.RESOURCE_LIBRARY:
+                recommendations[topic] = self.RESOURCE_LIBRARY[topic]
+
+        return recommendations
+    
     def generate_feedback(self):
         return {
             "overall_feedback": self.overall_feedback(),
             "topic_feedback": self.topic_feedback(),
-            "improvement_plan": self.improvement_plan()
+            "improvement_plan": self.improvement_plan(),
+            "resources": self.resource_recommendations()
         }
+    
+    
+
+
+
+
