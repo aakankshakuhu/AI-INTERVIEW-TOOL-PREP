@@ -50,7 +50,7 @@ class InterviewSession:
             "topic": topic,
             "similarity_score": result["similarity_score"],
             "label": result["label"],
-            "suggestion": result["feedback"]
+            "feedback": result["feedback"]
         }
 
         self.responses.append(record)
