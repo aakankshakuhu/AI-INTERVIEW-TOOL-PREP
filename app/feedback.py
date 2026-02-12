@@ -82,15 +82,41 @@ class FeedbackGenerator:
 
         return recommendations
     
+    
+    def readiness_level(self):
+        score = self.report["overall_score"]
+
+        if score >= 75:
+            return {
+                "level": "Interview Ready",
+                "description": "You are well-prepared for technical interviews and demonstrate strong topic mastery."
+            }
+        elif score >= 55:
+            return {
+                "level": "Moderately Prepared",
+                "description": "You have decent understanding but should refine weak areas before appearing for interviews."
+            }
+        elif score >= 35:
+            return {
+                "level": "Beginner",
+                "description": "Your fundamentals need strengthening before attempting competitive interviews."
+            }
+        else:
+            return {
+                "level": "Needs Foundation Work",
+                "description": "Significant conceptual gaps detected. Focus on core fundamentals before progressing."
+            }
+    
     def generate_feedback(self):
         return {
             "overall_feedback": self.overall_feedback(),
             "topic_feedback": self.topic_feedback(),
             "improvement_plan": self.improvement_plan(),
-            "resources": self.resource_recommendations()
+            "resources": self.resource_recommendations(),
+            "readiness": self.readiness_level()
         }
-    
-    
+
+
 
 
 
