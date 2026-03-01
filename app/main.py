@@ -36,7 +36,7 @@ from app.evaluator import PerformanceAnalyzer
 
 evaluation_results = session.get_all_responses()
 
-analyzer = PerformanceAnalyzer(evaluation_results)
+analyzer = PerformanceAnalyzer(evaluation_results, role="Data Scientist")
 report = analyzer.generate_report()
 
 print("\nInterview Performance Summary")
