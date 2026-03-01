@@ -81,8 +81,17 @@ print("Confidence Score:", feedback["confidence_score"])
 print("Confidence Insight:", feedback["confidence_feedback"])
 
 
+from utils.report_exporter import (
+    export_report_json,
+    export_report_pdf
+)
 
+json_path = export_report_json(report, feedback)
+pdf_path = export_report_pdf(report, feedback)
 
+print("\nReports Generated:")
+print("JSON:", json_path)
+print("PDF:", pdf_path)
 
 
 
