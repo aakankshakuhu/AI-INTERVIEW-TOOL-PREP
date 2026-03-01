@@ -79,24 +79,12 @@ def evaluate_response(question_id: str, user_answer: str) -> dict:
     }
 
 def run_evaluation(question_id: str, user_answer: str) -> dict:
-    """
-    Entry-point function for session manager / UI.
-    """
     return evaluate_response(question_id, user_answer)
 
 class PerformanceAnalyzer:
-    def __init__(self, evaluation_results):
-        """
-        evaluation_results: list of dicts
-        [
-            {
-                "question": "...",
-                "topic": "SQL",
-                "similarity_score": 0.72
-            }
-        ]
-        """
+    def __init__(self, evaluation_results, role="Data Scientist"):
         self.evaluation_results = evaluation_results
+        self.role = role
 
     def topic_wise_scores(self):
         topic_scores = {}
@@ -110,7 +98,6 @@ class PerformanceAnalyzer:
 
             topic_scores[topic].append(score)
 
-        # Convert to percentage
         for topic in topic_scores:
             avg_score = sum(topic_scores[topic]) / len(topic_scores[topic])
             topic_scores[topic] = round(avg_score * 100, 2)
@@ -140,9 +127,20 @@ class PerformanceAnalyzer:
         if not topic_scores:
             return 0
 
-        return round(
-            sum(topic_scores.values()) / len(topic_scores), 2
-        )
+        weights = self.TOPIC_WEIGHTS.get(self.role, {})
+
+        total_weighted_score = 0
+        total_weights = 0
+
+        for topic, score in topic_scores.items():
+            weight = weights.get(topic, 1)  # default weight = 1
+            total_weighted_score += score * weight
+            total_weights += weight
+
+        if total_weights == 0:
+            return 0
+
+        return round(total_weighted_score / total_weights, 2)
 
 
     def confidence_score(self, topic_scores):
@@ -166,12 +164,23 @@ class PerformanceAnalyzer:
         classification = self.classify_topics(topic_scores)
         overall = self.overall_score(topic_scores)
         confidence = self.confidence_score(topic_scores)
+        adjusted_confidence = round(confidence * (overall / 100), 2)
 
         return {
             "overall_score": overall,
             "topic_scores": topic_scores,
             "classification": classification,
-            "confidence_score": confidence
+            "confidence_score": adjusted_confidence
         }
+    
+    TOPIC_WEIGHTS = {
+    "Data Scientist": {
+        "Machine Learning": 3,
+        "Python / Data Handling": 2,
+        "SQL": 2,
+        "System Design Basics": 1,
+        "Operating Systems": 1
+    }
+}
 
 
