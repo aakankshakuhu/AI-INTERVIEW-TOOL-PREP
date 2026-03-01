@@ -164,7 +164,7 @@ class PerformanceAnalyzer:
         classification = self.classify_topics(topic_scores)
         overall = self.overall_score(topic_scores)
         confidence = self.confidence_score(topic_scores)
-        adjusted_confidence = round(confidence * (overall / 100), 2)
+        adjusted_confidence = round(confidence * (overall / 100), 2) #Adjust confidence score to account for overall performance level
 
         return {
             "overall_score": overall,
