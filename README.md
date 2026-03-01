@@ -98,3 +98,6 @@ Speech-to-text interview mode
 📌 Why This Project Matters
 
 This project demonstrates not only NLP implementation but also system design thinking, software engineering practices, and the ability to build end-to-end AI-driven applications.
+
+
+Note:Interview reports (PDF & JSON) are generated locally in the outputs/ directory and are intentionally excluded from version control.
