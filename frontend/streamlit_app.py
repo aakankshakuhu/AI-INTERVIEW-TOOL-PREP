@@ -1,202 +1,199 @@
 import streamlit as st
-import sys
-from pathlib import Path
-import plotly.graph_objects as go
+from streamlit_option_menu import option_menu
+import plotly.express as px
+import pandas as pd
 
-# Allow importing from project root
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+st.set_page_config(page_title="AI Interview Platform", layout="wide")
 
-from app.session import InterviewSession
-from app.evaluator import PerformanceAnalyzer
-from app.feedback import FeedbackGenerator
-from utils.report_exporter import export_report_pdf
+# --------------------------------------------------
+# CUSTOM CSS (MODERN DARK + GLOW)
+# --------------------------------------------------
 
-st.set_page_config(page_title="AI Interview Simulator", layout="wide")
+st.markdown("""
+<style>
 
-st.title("🤖 AI Interview Simulation Platform")
-
-# -------------------------
-# Initialize Session State
-# -------------------------
-defaults = {
-    "started": False,
-    "question_index": 0,
-    "session": None,
-    "finished": False,
-    "last_result": None,
-    "report": None,
-    "feedback": None,
+body {
+background-color: #0E1117;
+color: white;
 }
 
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
+.hero {
+padding: 80px 20px;
+text-align: center;
+background: radial-gradient(circle at center, #6a00ff, #0e1117);
+border-radius: 20px;
+margin-bottom: 30px;
+}
 
+.hero h1{
+font-size:48px;
+font-weight:700;
+}
 
-# -------------------------
-# Restart Button (Always Visible After Start)
-# -------------------------
-def reset_interview():
-    for key in defaults:
-        st.session_state[key] = defaults[key]
+.hero p{
+font-size:20px;
+color:#cfcfcf;
+}
 
-if st.session_state.started:
-    st.sidebar.button("🔄 Restart Interview", on_click=reset_interview)
+.card{
+background: linear-gradient(145deg,#1f1f2e,#0e1117);
+padding:25px;
+border-radius:15px;
+box-shadow:0px 10px 30px rgba(0,0,0,0.5);
+}
 
+.feature-title{
+font-size:20px;
+font-weight:600;
+}
 
-# -------------------------
-# Role Selection
-# -------------------------
-if not st.session_state.started:
-    role = st.selectbox("Select Role", ["Data Scientist"])
+</style>
+""", unsafe_allow_html=True)
 
-    if st.button("Start Interview"):
-        st.session_state.session = InterviewSession(role=role)
-        st.session_state.started = True
+# --------------------------------------------------
+# NAVIGATION
+# --------------------------------------------------
 
+selected = option_menu(
+    menu_title=None,
+    options=["Home","Start Interview","Dashboard","Reports"],
+    icons=["house","mic","bar-chart","file-earmark"],
+    orientation="horizontal"
+)
 
-# -------------------------
-# Interview Flow
-# -------------------------
-if st.session_state.started and not st.session_state.finished:
+# --------------------------------------------------
+# HOME PAGE
+# --------------------------------------------------
 
-    session = st.session_state.session
-    idx = st.session_state.question_index
-    total_questions = len(session.questions)
+if selected == "Home":
 
-    current = idx + 1
-    st.progress(min(current / total_questions, 1.0))
-    st.caption(f"Question {current} of {total_questions}")
+    st.markdown("""
+    <div class="hero">
+    <h1>AI Interview Simulation Platform</h1>
+    <p>Practice real-world technical interviews with AI-powered evaluation and feedback.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    question = session.get_question(idx)
+    st.write("")
 
-    if question:
-        st.subheader(f"Question {current}")
-        st.write(question["question_text"])
+    # Stats Row
+    col1,col2,col3,col4 = st.columns(4)
 
-        user_answer = st.text_area("Your Answer", height=150)
+    col1.metric("Mock Interviews", "520+")
+    col2.metric("Job Roles", "12")
+    col3.metric("Topics Covered", "30+")
+    col4.metric("Avg Score", "76%")
 
-        submit_disabled = len(user_answer.strip()) < 15
+    st.write("")
+    st.write("")
 
-        if st.button("Submit Answer", disabled=submit_disabled):
+    st.subheader("Platform Features")
 
-            result = session.submit_answer(
-                question_id=question["question_id"],
-                topic=question["topic"],
-                user_answer=user_answer
-            )
-
-            st.session_state.last_result = result
-
-        # Show result if available
-        if st.session_state.last_result:
-
-            result = st.session_state.last_result
-            col1, col2 = st.columns([1, 2])
-
-            with col1:
-                st.metric("Similarity Score", round(result["similarity_score"], 3))
-
-            with col2:
-                score = result["similarity_score"]
-
-                if score >= 0.65:
-                    st.success(result["feedback"])
-                elif score >= 0.40:
-                    st.warning(result["feedback"])
-                else:
-                    st.error(result["feedback"])
-
-            if st.button("Next Question"):
-                st.session_state.question_index += 1
-                st.session_state.last_result = None
-                st.rerun()
-
-    else:
-        st.session_state.finished = True
-
-
-# -------------------------
-# Final Dashboard
-# -------------------------
-if st.session_state.started and st.session_state.finished:
-
-    st.header("📊 Interview Summary")
-
-    responses = st.session_state.session.get_all_responses()
-
-    analyzer = PerformanceAnalyzer(responses, role="Data Scientist")
-    report = analyzer.generate_report()
-
-    feedback_generator = FeedbackGenerator(report)
-    feedback = feedback_generator.generate_feedback()
-
-    st.session_state.report = report
-    st.session_state.feedback = feedback
-
-    # -------- Score Gauge --------
-    st.subheader("Overall Performance")
-
-    gauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=report["overall_score"],
-        title={'text': "Overall Score"},
-        gauge={
-            'axis': {'range': [0, 100]},
-            'bar': {'thickness': 0.4},
-        }
-    ))
-
-    st.plotly_chart(gauge, use_container_width=True)
-
-    # -------- Radar Chart --------
-    st.subheader("Topic-wise Radar Analysis")
-
-    topics = list(report["topic_scores"].keys())
-    scores = list(report["topic_scores"].values())
-
-    radar = go.Figure()
-
-    radar.add_trace(go.Scatterpolar(
-        r=scores,
-        theta=topics,
-        fill='toself'
-    ))
-
-    radar.update_layout(
-        polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100])
-        ),
-        showlegend=False
-    )
-
-    st.plotly_chart(radar, use_container_width=True)
-
-    st.divider()
-
-    col1, col2 = st.columns(2)
+    col1,col2,col3 = st.columns(3)
 
     with col1:
-        st.metric("Confidence Score", report["confidence_score"])
+        st.markdown("""
+        <div class="card">
+        <div class="feature-title">AI Answer Evaluation</div>
+        NLP based scoring using TF-IDF and similarity models.
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
-        st.metric("Readiness Level", feedback["readiness"]["level"])
+        st.markdown("""
+        <div class="card">
+        <div class="feature-title">Topic-wise Analytics</div>
+        Identify strengths and weaknesses across interview topics.
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.divider()
+    with col3:
+        st.markdown("""
+        <div class="card">
+        <div class="feature-title">Download Interview Reports</div>
+        Automatically generate JSON and PDF reports.
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.subheader("🛠 Improvement Plan")
-    st.write(feedback["improvement_plan"])
+# --------------------------------------------------
+# START INTERVIEW PAGE
+# --------------------------------------------------
 
-    st.divider()
+elif selected == "Start Interview":
 
-    # PDF Download
-    if st.button("Generate PDF Report"):
-        pdf_path = export_report_pdf(report, feedback)
+    st.title("🎤 Start Mock Interview")
 
-        with open(pdf_path, "rb") as f:
-            st.download_button(
-                label="Download Report",
-                data=f,
-                file_name="interview_report.pdf",
-                mime="application/pdf"
-            )
+    role = st.selectbox(
+        "Select Job Role",
+        ["Data Scientist","Machine Learning Engineer","Backend Developer"]
+    )
+
+    experience = st.selectbox(
+        "Experience Level",
+        ["Beginner","Intermediate","Advanced"]
+    )
+
+    if st.button("Start Interview 🚀"):
+        st.success(f"Starting {role} interview for {experience} level!")
+
+        st.write("Question 1:")
+        user_answer = st.text_area("Enter your answer")
+
+        if st.button("Submit Answer"):
+
+            # placeholder evaluation
+            score = 78
+
+            st.metric("Answer Score", f"{score}%")
+
+# --------------------------------------------------
+# PERFORMANCE DASHBOARD
+# --------------------------------------------------
+
+elif selected == "Dashboard":
+
+    st.title("📊 Performance Dashboard")
+
+    data = {
+        "Topic":["Python","DSA","ML","SQL","System Design"],
+        "Score":[85,70,75,80,60]
+    }
+
+    df = pd.DataFrame(data)
+
+    fig = px.line(df,x="Topic",y="Score",markers=True)
+
+    st.plotly_chart(fig,use_container_width=True)
+
+    st.write("")
+
+    st.subheader("Topic Strength")
+
+    fig2 = px.bar(df,x="Topic",y="Score")
+
+    st.plotly_chart(fig2,use_container_width=True)
+
+# --------------------------------------------------
+# REPORTS PAGE
+# --------------------------------------------------
+
+elif selected == "Reports":
+
+    st.title("📄 Interview Reports")
+
+    report_list = [
+        "Interview_DS_01.pdf",
+        "Interview_ML_02.pdf",
+        "Interview_Backend_03.pdf"
+    ]
+
+    for report in report_list:
+        col1,col2 = st.columns([4,1])
+
+        col1.write(report)
+
+        col2.download_button(
+            "Download",
+            data="Sample Report",
+            file_name=report
+        )
