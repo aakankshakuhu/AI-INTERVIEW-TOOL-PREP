@@ -1,12 +1,33 @@
+import sys
+from pathlib import Path
+
+# Add project root to Python path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 import streamlit as st
 from streamlit_option_menu import option_menu
 import plotly.express as px
 import pandas as pd
+from app.session import InterviewSession
 
 st.set_page_config(page_title="AI Interview Platform", layout="wide")
 
 # --------------------------------------------------
-# CUSTOM CSS (MODERN DARK + GLOW)
+# SESSION STATE
+# --------------------------------------------------
+
+if "session" not in st.session_state:
+    st.session_state.session = None
+
+if "current_question" not in st.session_state:
+    st.session_state.current_question = None
+
+if "score" not in st.session_state:
+    st.session_state.score = None
+
+
+# --------------------------------------------------
+# CUSTOM CSS
 # --------------------------------------------------
 
 st.markdown("""
@@ -50,6 +71,7 @@ font-weight:600;
 </style>
 """, unsafe_allow_html=True)
 
+
 # --------------------------------------------------
 # NAVIGATION
 # --------------------------------------------------
@@ -74,18 +96,12 @@ if selected == "Home":
     </div>
     """, unsafe_allow_html=True)
 
-    st.write("")
-
-    # Stats Row
     col1,col2,col3,col4 = st.columns(4)
 
     col1.metric("Mock Interviews", "520+")
     col2.metric("Job Roles", "12")
     col3.metric("Topics Covered", "30+")
     col4.metric("Avg Score", "76%")
-
-    st.write("")
-    st.write("")
 
     st.subheader("Platform Features")
 
@@ -115,8 +131,9 @@ if selected == "Home":
         </div>
         """, unsafe_allow_html=True)
 
+
 # --------------------------------------------------
-# START INTERVIEW PAGE
+# START INTERVIEW
 # --------------------------------------------------
 
 elif selected == "Start Interview":
@@ -134,47 +151,84 @@ elif selected == "Start Interview":
     )
 
     if st.button("Start Interview 🚀"):
+
+        st.session_state.session = InterviewSession(role)
+
+        question = st.session_state.session.get_next_question()
+
+        st.session_state.current_question = question
+
         st.success(f"Starting {role} interview for {experience} level!")
 
-        st.write("Question 1:")
+    # DISPLAY QUESTION
+    if st.session_state.current_question:
+
+        question_data = st.session_state.current_question
+
+        st.subheader("Question")
+        st.write(question_data["question"])
+
         user_answer = st.text_area("Enter your answer")
 
         if st.button("Submit Answer"):
 
-            # placeholder evaluation
-            score = 78
+            result = st.session_state.session.evaluate_answer(user_answer, question_data)
 
-            st.metric("Answer Score", f"{score}%")
+            st.session_state.score = result["score"]
+
+            st.write("✅ Matched Keywords:", result["matched"])
+            st.write("❌ Missing Keywords:", result["missed"])
+
+            # next question
+            next_q = st.session_state.session.get_next_question()
+            st.session_state.current_question = next_q
+
+    # SHOW SCORE
+    if st.session_state.score is not None:
+        st.metric("Answer Score", f"{st.session_state.score}%")
 
 # --------------------------------------------------
-# PERFORMANCE DASHBOARD
+# DASHBOARD
 # --------------------------------------------------
 
 elif selected == "Dashboard":
 
     st.title("📊 Performance Dashboard")
 
-    data = {
-        "Topic":["Python","DSA","ML","SQL","System Design"],
-        "Score":[85,70,75,80,60]
-    }
+    if st.session_state.session is None:
+        st.warning("Start an interview first!")
+    
+    else:
+        topic_scores = st.session_state.session.get_topic_wise_scores()
 
-    df = pd.DataFrame(data)
+        st.subheader("📊 Topic-wise Performance")
+        st.write(topic_scores)
 
-    fig = px.line(df,x="Topic",y="Score",markers=True)
+        strengths, weaknesses = st.session_state.session.get_strengths_and_weaknesses()
 
-    st.plotly_chart(fig,use_container_width=True)
+        st.subheader("💪 Strengths")
+        st.write(strengths)
 
-    st.write("")
+        st.subheader("⚠️ Weak Areas")
+        st.write(weaknesses)
 
-    st.subheader("Topic Strength")
+        # Radar Chart
+        df = pd.DataFrame({
+            "Topic": list(topic_scores.keys()),
+            "Score": list(topic_scores.values())
+        })
 
-    fig2 = px.bar(df,x="Topic",y="Score")
+        fig = px.line_polar(
+            df,
+            r="Score",
+            theta="Topic",
+            line_close=True
+        )
 
-    st.plotly_chart(fig2,use_container_width=True)
+        st.plotly_chart(fig)
 
 # --------------------------------------------------
-# REPORTS PAGE
+# REPORTS
 # --------------------------------------------------
 
 elif selected == "Reports":
@@ -188,6 +242,7 @@ elif selected == "Reports":
     ]
 
     for report in report_list:
+
         col1,col2 = st.columns([4,1])
 
         col1.write(report)
