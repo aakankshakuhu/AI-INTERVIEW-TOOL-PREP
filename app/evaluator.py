@@ -51,32 +51,38 @@ DATA_PATH = BASE_DIR / "data" / "questions.csv"
 df_questions = pd.read_csv(DATA_PATH)
 
 
-def evaluate_response(question_id: str, user_answer: str) -> dict:
-    """
-    Evaluates a user's answer for a given question ID.
-    """
-    # Fetch ideal answer
-    row = df_questions[df_questions["question_id"] == question_id]
+def evaluate_answer(user_answer, ideal_answer, keywords):
 
-    if row.empty:
-        return {"error": "Invalid question ID"}
+    # Convert keywords if coming from CSV
+    if isinstance(keywords, str):
+        keywords = parse_keywords(keywords)
 
-    topic = row.iloc[0]["topic"]
-    ideal_answer = row.iloc[0]["ideal_answer"]
+    # Case 1: Ideal answer exists
+    if ideal_answer and ideal_answer != "TO_BE_ADDED":
+        
+        tfidf_score = compute_similarity(user_answer, ideal_answer)
+        keyword_score = keyword_match_score(user_answer, keywords)
 
-    # Compute similarity
-    similarity = compute_similarity(user_answer, ideal_answer)
+        final_score = (0.7 * tfidf_score) + (0.3 * keyword_score)
 
-    # Generate feedback
-    evaluation = evaluate_answer(similarity)
+        matched, missed = keyword_match_details(user_answer, keywords)
 
-    return {
-        "question_id": question_id,
-        "topic": topic,
-        "similarity_score": round(similarity, 3),
-        "label": evaluation["label"],
-        "feedback": evaluation["feedback"]
-    }
+        return {
+            "score": round(final_score, 2),
+            "matched": matched,
+            "missed": missed
+        }
+
+    # Case 2: Fallback (only keywords)
+    else:
+        keyword_score = keyword_match_score(user_answer, keywords)
+        matched, missed = keyword_match_details(user_answer, keywords)
+
+        return {
+            "score": keyword_score,
+            "matched": matched,
+            "missed": missed
+        }
 
 def run_evaluation(question_id: str, user_answer: str) -> dict:
     return evaluate_response(question_id, user_answer)
@@ -182,5 +188,30 @@ class PerformanceAnalyzer:
         "Operating Systems": 1
     }
 }
+
+def keyword_match_score(user_answer, keywords):
+    if not keywords:
+        return 0
+
+    user_answer = user_answer.lower()
+
+    matched = sum(1 for word in keywords if word in user_answer)
+
+    score = (matched / len(keywords)) * 100
+    return round(score, 2)
+
+def keyword_match_details(user_answer, keywords):
+    user_answer = user_answer.lower()
+
+    matched = []
+    missed = []
+
+    for word in keywords:
+        if word in user_answer:
+            matched.append(word)
+        else:
+            missed.append(word)
+
+    return matched, missed
 
 
