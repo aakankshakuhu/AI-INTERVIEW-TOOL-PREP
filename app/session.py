@@ -1,60 +1,117 @@
-import random
 import pandas as pd
-from pathlib import Path
+import random
 
-from app.evaluator import run_evaluation
+# Import evaluator functions
+from app.evaluator import evaluate_answer
+
+
+def parse_keywords(keyword_str):
+    if not isinstance(keyword_str, str):
+        return []
+    return [k.strip().lower() for k in keyword_str.split(",")]
 
 
 class InterviewSession:
-    def __init__(self, role: str):
-        self.role = role
-        self.responses = []
 
-        # Load dataset
-        base_dir = Path(__file__).resolve().parent.parent
-        data_path = base_dir / "data" / "questions.csv"
-        self.df = pd.read_csv(data_path)
+    def __init__(self, role):
 
-        # Filter questions by role
-        self.questions = self.df[self.df["role"] == role].copy()
+        # load dataset
+        df = pd.read_csv("data/questions.csv")
 
-        if self.questions.empty:
-            raise ValueError(f"No questions found for role: {role}")
+        # normalize column names
+        df.columns = df.columns.str.strip().str.lower()
 
-        # Randomize question order
-        self.questions = self.questions.sample(frac=1).reset_index(drop=True)
+        # filter questions by role
+        self.questions = df[df["role"] == role]
 
-    def get_question(self, index: int) -> dict:
-        """
-        Returns question at a given index.
-        """
-        if index >= len(self.questions):
-            return {}
+        # convert to list of dictionaries
+        self.questions = self.questions.to_dict("records")
 
-        row = self.questions.iloc[index]
-        return {
-            "question_id": row["question_id"],
-            "question_text": row["question_text"],
-            "topic": row["topic"],
-            "input_type": row["input_type"]
-        }
+        # shuffle questions
+        random.shuffle(self.questions)
 
-    def submit_answer(self, question_id: str, topic: str, user_answer: str) -> dict:
-        """
-        Evaluates and stores the user's answer.
-        """
-        result = run_evaluation(question_id, user_answer)
+        # tracking
+        self.current_index = 0
+        self.responses = []   # 🔥 store all responses
 
-        record = {
-            "question_id": question_id,
+    def get_next_question(self):
+
+        if self.current_index < len(self.questions):
+
+            question_data = self.questions[self.current_index]
+            self.current_index += 1
+
+            return {
+                "question": question_data["question_text"],
+                "topic": question_data["topic"],
+                "ideal_answer": question_data["ideal_answer"],
+                "input_type": question_data["input_type"],
+                "keywords": question_data.get("keywords", "")
+            }
+
+        return None
+
+    def evaluate_answer(self, user_answer, question_data):
+
+        ideal_answer = question_data["ideal_answer"]
+        topic = question_data["topic"]
+        keywords = parse_keywords(question_data.get("keywords", ""))
+
+        # 🔥 call evaluator (HYBRID)
+        result = evaluate_answer(user_answer, ideal_answer, keywords)
+
+        score = result["score"]
+        matched = result["matched"]
+        missed = result["missed"]
+
+        # 🔥 store response
+        self.responses.append({
+            "question": question_data["question"],
             "topic": topic,
-            "similarity_score": result["similarity_score"],
-            "label": result["label"],
-            "feedback": result["feedback"]
-        }
+            "score": score,
+            "matched": matched,
+            "missed": missed
+        })
 
-        self.responses.append(record)
-        return record
+        return result
 
+    # 🔥 (PREP FOR TASK 19)
     def get_all_responses(self):
         return self.responses
+    
+    def get_topic_wise_scores(self):
+
+        topic_scores = {}
+
+        for response in self.responses:
+            topic = response["topic"]
+            score = response["score"]
+
+            if topic not in topic_scores:
+                topic_scores[topic] = []
+
+            topic_scores[topic].append(score)
+
+        # compute averages
+        topic_avg = {}
+        for topic, scores in topic_scores.items():
+            topic_avg[topic] = round(sum(scores) / len(scores), 2)
+
+        return topic_avg
+
+    # ✅ FIXED: inside class
+    def get_strengths_and_weaknesses(self):
+
+        topic_scores = self.get_topic_wise_scores()
+
+        strengths = []
+        weaknesses = []
+
+        for topic, score in topic_scores.items():
+            if score >= 75:
+                strengths.append(topic)
+            elif score <= 60:
+                weaknesses.append(topic)
+
+        return strengths, weaknesses
+    
