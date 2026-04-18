@@ -1,217 +1,121 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
 from utils.text_preprocessing import clean_text
-import pandas as pd
-from pathlib import Path
 import math
 
+
+# ------------------ SIMILARITY ------------------ #
 def compute_similarity(user_answer: str, ideal_answer: str) -> float:
-    """
-    Computes TF-IDF cosine similarity between user answer and ideal answer.
-    """
-    # Clean texts
     user_clean = clean_text(user_answer)
     ideal_clean = clean_text(ideal_answer)
 
-    # Vectorize
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform([user_clean, ideal_clean])
 
-    # Compute cosine similarity
     similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
-
-    return float(similarity[0][0])
-
-def evaluate_answer(similarity_score: float) -> dict:
-    """
-    Maps similarity score to qualitative feedback.
-    """
-    if similarity_score >= 0.65:
-        return {
-            "label": "Good",
-            "feedback": "Your answer covers most of the important concepts clearly."
-        }
-    elif similarity_score >= 0.40:
-        return {
-            "label": "Average",
-            "feedback": "Your answer shows partial understanding but misses some key points."
-        }
-    else:
-        return {
-            "label": "Needs Improvement",
-            "feedback": "Your answer lacks key concepts and needs further improvement."
-        }
+    return float(similarity[0][0])  # 0–1
 
 
-# Load dataset once
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_PATH = BASE_DIR / "data" / "questions.csv"
+# ------------------ KEYWORD LOGIC (IMPROVED) ------------------ #
 
-df_questions = pd.read_csv(DATA_PATH)
+def normalize(text):
+    return (
+        text.lower()
+        .replace(" ", "")
+        .replace("s", "")
+        .replace("ing", "")
+    )
 
-
-def evaluate_answer(user_answer, ideal_answer, keywords):
-
-    # Convert keywords if coming from CSV
-    if isinstance(keywords, str):
-        keywords = parse_keywords(keywords)
-
-    # Case 1: Ideal answer exists
-    if ideal_answer and ideal_answer != "TO_BE_ADDED":
-        
-        tfidf_score = compute_similarity(user_answer, ideal_answer)
-        keyword_score = keyword_match_score(user_answer, keywords)
-
-        final_score = (0.7 * tfidf_score) + (0.3 * keyword_score)
-
-        matched, missed = keyword_match_details(user_answer, keywords)
-
-        return {
-            "score": round(final_score, 2),
-            "matched": matched,
-            "missed": missed
-        }
-
-    # Case 2: Fallback (only keywords)
-    else:
-        keyword_score = keyword_match_score(user_answer, keywords)
-        matched, missed = keyword_match_details(user_answer, keywords)
-
-        return {
-            "score": keyword_score,
-            "matched": matched,
-            "missed": missed
-        }
-
-def run_evaluation(question_id: str, user_answer: str) -> dict:
-    return evaluate_response(question_id, user_answer)
-
-class PerformanceAnalyzer:
-    def __init__(self, evaluation_results, role="Data Scientist"):
-        self.evaluation_results = evaluation_results
-        self.role = role
-
-    def topic_wise_scores(self):
-        topic_scores = {}
-
-        for result in self.evaluation_results:
-            topic = result["topic"]
-            score = result["similarity_score"]
-
-            if topic not in topic_scores:
-                topic_scores[topic] = []
-
-            topic_scores[topic].append(score)
-
-        for topic in topic_scores:
-            avg_score = sum(topic_scores[topic]) / len(topic_scores[topic])
-            topic_scores[topic] = round(avg_score * 100, 2)
-
-        return topic_scores
-
-    def classify_topics(self, topic_scores):
-        strengths = []
-        weaknesses = []
-        average = []
-
-        for topic, score in topic_scores.items():
-            if score >= 75:
-                strengths.append(topic)
-            elif score >= 50:
-                average.append(topic)
-            else:
-                weaknesses.append(topic)
-
-        return {
-            "strong": strengths,
-            "average": average,
-            "weak": weaknesses
-        }
-
-    def overall_score(self, topic_scores):
-        if not topic_scores:
-            return 0
-
-        weights = self.TOPIC_WEIGHTS.get(self.role, {})
-
-        total_weighted_score = 0
-        total_weights = 0
-
-        for topic, score in topic_scores.items():
-            weight = weights.get(topic, 1)  # default weight = 1
-            total_weighted_score += score * weight
-            total_weights += weight
-
-        if total_weights == 0:
-            return 0
-
-        return round(total_weighted_score / total_weights, 2)
-
-
-    def confidence_score(self, topic_scores):
-        scores = list(topic_scores.values())
-
-        if len(scores) <= 1:
-            return 100.0  # single topic → fully stable
-
-        mean = sum(scores) / len(scores)
-
-        variance = sum((x - mean) ** 2 for x in scores) / len(scores)
-        std_dev = math.sqrt(variance)
-
-        # Normalize confidence (cap effect)
-        confidence = max(0, 100 - std_dev)
-
-        return round(confidence, 2)
-    
-    def generate_report(self):
-        topic_scores = self.topic_wise_scores()
-        classification = self.classify_topics(topic_scores)
-        overall = self.overall_score(topic_scores)
-        confidence = self.confidence_score(topic_scores)
-        adjusted_confidence = round(confidence * (overall / 100), 2) #Adjust confidence score to account for overall performance level
-
-        return {
-            "overall_score": overall,
-            "topic_scores": topic_scores,
-            "classification": classification,
-            "confidence_score": adjusted_confidence
-        }
-    
-    TOPIC_WEIGHTS = {
-    "Data Scientist": {
-        "Machine Learning": 3,
-        "Python / Data Handling": 2,
-        "SQL": 2,
-        "System Design Basics": 1,
-        "Operating Systems": 1
-    }
-}
 
 def keyword_match_score(user_answer, keywords):
     if not keywords:
         return 0
 
-    user_answer = user_answer.lower()
+    user_norm = normalize(user_answer)
 
-    matched = sum(1 for word in keywords if word in user_answer)
+    matched = sum(
+        1 for word in keywords if normalize(word) in user_norm or user_norm in normalize(word)
+    )
 
-    score = (matched / len(keywords)) * 100
-    return round(score, 2)
+    return (matched / len(keywords)) * 100
+
 
 def keyword_match_details(user_answer, keywords):
-    user_answer = user_answer.lower()
+    user_norm = normalize(user_answer)
 
     matched = []
     missed = []
 
     for word in keywords:
-        if word in user_answer:
+        if normalize(word) in user_norm:
             matched.append(word)
         else:
             missed.append(word)
 
     return matched, missed
 
+def normalize(text):
+    return text.lower().replace(" ", "").replace("s", "")
 
+
+# ------------------ MAIN EVALUATION ------------------ #
+def evaluate_answer(user_answer, ideal_answer, keywords):
+
+    # TF-IDF similarity (0–1 → convert to %)
+    if ideal_answer and ideal_answer != "TO_BE_ADDED":
+        similarity = compute_similarity(user_answer, ideal_answer) * 100
+    else:
+        similarity = 0
+
+    # Keyword score (already %)
+    keyword_score = keyword_match_score(user_answer, keywords)
+
+    # Final weighted score
+    final_score = max((0.4 * similarity) + (0.6 * keyword_score), keyword_score)
+
+    # Keyword details
+    matched, missed = keyword_match_details(user_answer, keywords)
+
+    # Confidence (based on consistency of scoring signals)
+    confidence = 100 - abs(similarity - keyword_score)
+    confidence = max(50, min(confidence, 100))  # clamp
+
+
+    if keyword_score >= 60:
+        final_score = max(final_score, 60)
+
+
+    # Balanced scoring
+    base_score = (0.5 * similarity) + (0.5 * keyword_score)
+
+    # Prevent collapse
+    final_score = max(base_score, keyword_score)
+
+    # Strong concept boost
+    if keyword_score >= 60:
+        final_score = max(final_score, 70)
+
+    # Cap
+    final_score = min(final_score, 100)
+
+    # Feedback generation
+    if final_score >= 70:
+        feedback = "Good answer. Core concept is correct."
+    elif final_score >= 50:
+        feedback = "Partial understanding. Add more detail."
+    else:
+        feedback = "Weak answer. Missing key concepts."
+
+    print("SIM:", similarity)
+    print("KEY:", keyword_score)
+    print("FINAL:", final_score)
+
+    return {
+        "score": round(final_score, 2),
+        "confidence": round(confidence, 2),
+        "keyword_match": round(keyword_score, 2),
+        "matched_keywords": matched,
+        "missing_keywords": missed,
+        "feedback": feedback
+    }
+    
