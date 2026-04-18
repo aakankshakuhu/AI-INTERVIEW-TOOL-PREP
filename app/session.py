@@ -5,10 +5,17 @@ import random
 from app.evaluator import evaluate_answer
 
 
-def parse_keywords(keyword_str):
-    if not isinstance(keyword_str, str):
+def parse_keywords(keywords):
+    if not keywords:
         return []
-    return [k.strip().lower() for k in keyword_str.split(",")]
+
+    if isinstance(keywords, float):
+        return []
+
+    if isinstance(keywords, str):
+        return [k.strip().lower() for k in keywords.split(",")]
+
+    return keywords
 
 
 class InterviewSession:
@@ -45,7 +52,7 @@ class InterviewSession:
                 "question": question_data["question_text"],
                 "topic": question_data["topic"],
                 "ideal_answer": question_data["ideal_answer"],
-                "input_type": question_data["input_type"],
+                "input_type": question_data.get("input_type", "text"),
                 "keywords": question_data.get("keywords", "")
             }
 
@@ -53,25 +60,30 @@ class InterviewSession:
 
     def evaluate_answer(self, user_answer, question_data):
 
-        ideal_answer = question_data["ideal_answer"]
-        topic = question_data["topic"]
+        ideal_answer = question_data.get("ideal_answer")
+        topic = question_data.get("topic")
         keywords = parse_keywords(question_data.get("keywords", ""))
 
-        # 🔥 call evaluator (HYBRID)
+
         result = evaluate_answer(user_answer, ideal_answer, keywords)
 
+        # ✅ extract correct fields
         score = result["score"]
-        matched = result["matched"]
-        missed = result["missed"]
+        matched = result["matched_keywords"]
+        missed = result["missing_keywords"]
+        confidence = result["confidence"]
 
-        # 🔥 store response
+    
         self.responses.append({
-            "question": question_data["question"],
+            "question": question_data.get("question"),
             "topic": topic,
             "score": score,
-            "matched": matched,
-            "missed": missed
+            "confidence": confidence,
+            "matched_keywords": matched,
+            "missing_keywords": missed
         })
+
+        print("KEYWORDS RAW:", question_data.get("keywords"))
 
         return result
 
@@ -114,4 +126,6 @@ class InterviewSession:
                 weaknesses.append(topic)
 
         return strengths, weaknesses
+    
+    
     
