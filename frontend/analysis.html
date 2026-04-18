@@ -287,15 +287,9 @@
 <h3 class="font-headline font-bold text-lg text-on-surface">Matched Keywords</h3>
 </div>
 <div class="flex flex-wrap gap-2">
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Kubernetes Orchestration</span>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Micro-frontend</span>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Async Patterns</span>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Distributed Systems</span>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Event Driven</span>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider glow-secondary">Rust-Backend</span>
+<div id="matched-keywords"></div>
 </div>
 <div class="mt-8 pt-6 border-t border-outline-variant/10">
-<p class="text-[10px] text-on-surface-variant uppercase tracking-widest leading-loose">The candidate demonstrated high fluency in architectural scalability, specifically citing <span class="text-secondary">Cloud-Native</span> strategies and <span class="text-secondary">Low-Latency</span> requirements.</p>
 </div>
 </div>
 <!-- Missing Keywords -->
@@ -305,13 +299,10 @@
 <h3 class="font-headline font-bold text-lg text-on-surface">Missing Keywords</h3>
 </div>
 <div class="flex flex-wrap gap-2">
-<span class="px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider">Multi-tenant Security</span>
-<span class="px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider">Cost Optimization</span>
-<span class="px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider">Legacy Integration</span>
-<span class="px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider">Stakeholder Mgmt</span>
+
 </div>
 <div class="mt-8 pt-6 border-t border-outline-variant/10">
-<p class="text-[10px] text-on-surface-variant uppercase tracking-widest leading-loose">Critical gap detected in <span class="text-error">Infrastructure Budgeting</span>. Candidate focused heavily on performance at the cost of operational overhead.</p>
+
 </div>
 </div>
 </div>
@@ -328,4 +319,41 @@
 </div>
 </main>
 </div>
+<script>
+window.onload = function () {
+    const data = JSON.parse(localStorage.getItem("analysis_data"));
+
+    if (!data) {
+        alert("No data found");
+        return;
+    }
+
+    // 🟢 MAP DATA TO UI
+
+    // Overall Score
+    document.querySelector(".text-6xl.text-primary").innerText = data.score;
+
+    // AI Confidence (example logic)
+    const confidence = data.confidence || 85;
+    document.querySelector(".text-6xl.text-secondary").innerText = confidence;
+
+    // Keyword Match %
+    const keywordMatch = data.keyword_match || 70;
+    document.querySelector(".text-6xl.text-on-surface").innerText = keywordMatch;
+
+    // Missing Keywords
+    const missingContainer = document.querySelectorAll(".flex.flex-wrap.gap-2")[1];
+    missingContainer.innerHTML = "";
+
+    data.missing_keywords.forEach(k => {
+        const span = document.createElement("span");
+        span.className = "px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider";
+        span.innerText = k;
+        missingContainer.appendChild(span);
+    });
+
+    // Synthetic Insight
+    document.querySelector(".text-xs.mt-1").innerText = data.feedback;
+};
+</script>
 </body></html>
