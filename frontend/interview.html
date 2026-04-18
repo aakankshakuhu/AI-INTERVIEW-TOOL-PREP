@@ -285,6 +285,7 @@ window.onload = async function () {
     document.getElementById("questionText").innerText = data.question;
 };
 
+console.log(window.current_question);
 
 // 🔥 SUBMIT ANSWER
 async function submitAnswer() {
@@ -306,10 +307,11 @@ async function submitAnswer() {
 
     const result = await res.json();
 
-    alert("Score: " + result.score);
+    // store result for next page
+    localStorage.setItem("analysis_data", JSON.stringify(result));
 
-    // move to dashboard
-    window.location.href = "analysis.html";
+    // go to analysis page
+    window.location.href = "/static/analysis.html";
 }
 
 </script>
