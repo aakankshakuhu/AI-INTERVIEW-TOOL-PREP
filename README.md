@@ -106,6 +106,27 @@ AI-Interview-Prep-Tool/
 │
 ├── main.py # FastAPI entry point
 
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](assets/screenshots/dashboard.png)
+
+![Dashboard2](assets/screenshots/dashboard2.png)
+
+![Dashboard3](assets/screenshots/dashboard3.png)
+
+### 🎤 Interview Interface
+![Interview UI](assets/screenshots/interview.png)
+
+### 📊 Analytics Dashboard
+![Analytics](assets/screenshots/analysis.png)
+
+![Analytics2](assets/screenshots/analysis2.png)
+
+### 📄 PDF Report
+![PDF Report](assets/screenshots/graphs.png)
+
+![PDF Report2](assets/screenshots/graphs2.png)
 
 ---
 
@@ -121,24 +142,3 @@ AI-Interview-Prep-Tool/
   "feedback": "Partial understanding. Add more detail."
 }
 
-## 📸 Screenshots
-
-### Dashboard
-(assets/screenshots/dashboard.png)
-
-(assets/screenshots/dashboard2.png)
-
-(assets/screenshots/dashboard3.png)
-
-### 🎤 Interview Interface
-![Interview UI](assets/screenshots/interview.png)
-
-### 📊 Analytics Dashboard
-![Analytics](assets/screenshots/analysis.png)
-
-(assets/screenshots/analysis2.png)
-
-### 📄 PDF Report
-![PDF Report](assets/screenshots/graphs.png)
-
-(assets/screenshots/graphs2.png)
