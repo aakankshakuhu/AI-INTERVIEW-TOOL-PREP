@@ -120,3 +120,25 @@ AI-Interview-Prep-Tool/
   "missing_keywords": ["central tendency", "skew", "outliers"],
   "feedback": "Partial understanding. Add more detail."
 }
+
+## 📸 Screenshots
+
+### Dashboard
+(assets/screenshots/dashboard.png)
+
+(assets/screenshots/dashboard2.png)
+
+(assets/screenshots/dashboard3.png)
+
+### 🎤 Interview Interface
+![Interview UI](assets/screenshots/interview.png)
+
+### 📊 Analytics Dashboard
+![Analytics](assets/screenshots/analysis.png)
+
+(assets/screenshots/analysis2.png)
+
+### 📄 PDF Report
+![PDF Report](assets/screenshots/graphs.png)
+
+(assets/screenshots/graphs2.png)
