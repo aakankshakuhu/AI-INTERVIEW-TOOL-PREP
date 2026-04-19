@@ -1,103 +1,122 @@
-# AI-INTERVIEW-TOOL-PREP
-AI-powered interview simulation tool using NLP to evaluate answers, manage interview sessions, and generate topic-wise performance insights. Built with modular Python architecture, TF-IDF, and cosine similarity to mirror real-world technical interviews.
+# 🤖 AI Interview Simulation Platform
 
-🎯 AI Interview Preparation Tool
-📌 Objective
+An AI-powered mock interview platform that simulates real interview scenarios, evaluates responses using NLP techniques, and provides detailed performance analytics with visual insights.
 
-The objective of this project is to build an AI-powered interview simulation platform that helps candidates practice, evaluate, and improve their interview performance in a structured and measurable way.
-Unlike simple Q&A tools, this system focuses on simulating real interview conditions, analyzing user responses using Natural Language Processing (NLP) techniques, and providing topic-wise performance insights.
+---
 
-The tool is designed to assist students and early professionals in identifying their strengths and weaknesses across different technical topics and to guide them with actionable feedback for continuous improvement.
+## 🚀 Overview
 
-🌱 Vision
+This project is a full-stack AI interview simulation system where users can practice role-based interviews and receive structured, data-driven feedback.
 
-The long-term vision of this project is to create a scalable, role-based AI interview assistant that can adapt to different job roles, experience levels, and interview formats.
+The platform evaluates answers using a hybrid NLP approach combining **TF-IDF + Cosine Similarity + Keyword Matching**, and presents results through an interactive analytics dashboard.
 
-Planned future extensions include:
+---
 
-Role-specific interview tracks (Data Scientist, Backend Engineer, ML Engineer, etc.)
+## 🎯 Key Features
 
-Advanced answer evaluation using transformer-based models
+### 🎤 Mock Interview Engine
+- Role-based question generation (e.g., Data Scientist)
+- Session-based interview flow
+- Dynamic question progression
 
-Performance tracking across multiple interview sessions
+### 🧠 AI Evaluation System
+- TF-IDF vectorization for semantic similarity
+- Cosine similarity scoring
+- Keyword-based evaluation for concept coverage
+- Hybrid scoring system for balanced evaluation
 
-Personalized learning recommendations based on historical weaknesses
+### 📊 Analytics Dashboard
+- Overall performance score
+- AI confidence level
+- Keyword match percentage
+- Matched & missing keywords
+- Smart feedback generation
 
-A web-based interactive interface for a real interview-like experience
+### 📈 Data Visualization
+- Radar chart for multi-dimensional performance
+- Bar chart for score breakdown
+- Real-time analytics rendering using Chart.js
 
-The ultimate goal is to bridge the gap between theoretical preparation and real-world interviews using AI-driven evaluation and feedback.
+### 📄 PDF Report Generation
+- Export interview results as a professional report
+- Includes charts, scores, and insights
+- Clean, structured output using jsPDF + html2canvas
 
-🧠 Approach & System Design
+---
 
-This project follows a modular, pipeline-oriented architecture, inspired by real-world machine learning systems.
+## 🏗️ Tech Stack
 
-🔹 Data-Driven Design
+### Backend
+- FastAPI (Python)
+- TF-IDF (scikit-learn)
+- Cosine Similarity
+- Custom evaluation logic
 
-Interview questions are stored in a CSV-based question bank, allowing easy updates without modifying application logic.
+### Frontend
+- HTML, CSS (Tailwind)
+- JavaScript
+- Chart.js (visualizations)
 
-Each question is tagged with metadata such as topic and difficulty to enable structured analysis.
+### Reporting
+- html2canvas
+- jsPDF
 
-🔹 NLP-Based Answer Evaluation
+---
 
-User answers are evaluated using TF-IDF vectorization and cosine similarity.
+## ⚙️ How It Works
 
-This approach provides an interpretable similarity score between the user’s response and an ideal reference answer.
+1. User selects a role and starts interview
+2. System fetches questions from dataset
+3. User submits answers
+4. Backend evaluates using:
+   - Semantic similarity (TF-IDF)
+   - Keyword matching
+5. Scores are calculated and stored
+6. Frontend displays analytics dashboard
+7. User can export a PDF report
 
-The evaluation pipeline is designed to be easily replaceable with more advanced models in the future.
+---
 
-🔹 Text Preprocessing Pipeline
+## 🧠 Evaluation Logic
 
-Raw user input is normalized through preprocessing steps such as lowercasing, punctuation removal, and stopword elimination.
+Final Score = Weighted combination of:
+- Semantic Similarity (TF-IDF + Cosine)
+- Keyword Match Coverage
 
-This improves the quality and consistency of textual similarity comparisons.
+This hybrid approach ensures:
+- Understanding of meaning (semantic)
+- Coverage of important concepts (keywords)
 
-🔹 Interview Session Management
+---
 
-Each interview is managed as a session, ensuring proper tracking of questions asked, responses given, and topics covered.
-
-This design enables topic-wise aggregation and future extensions like session history and user profiling.
-
-🔹 Performance Aggregation & Analysis
-
-Scores are aggregated at the topic level to identify strong and weak areas.
-
-The system emphasizes explainability, ensuring users understand why they performed well or poorly in certain topics.
-
-🛠️ Technology Stack
-
-Language: Python
-
-NLP: TF-IDF, Cosine Similarity
-
-Data Handling: CSV-based datasets
-
-Architecture: Modular, separation of concerns
-
-📈 Key Takeaways
-
-Designed with clean code principles and scalable architecture
-
-Focus on interpretability over black-box scoring
-
-Easily extensible for UI, databases, and advanced AI models
-
-Built to reflect real interview workflows, not just question answering
-
-🚀 Future Scope
-
-Transformer-based semantic evaluation
-
-Streamlit / Flask web interface
-
-User authentication and interview history
-
-PDF-based interview reports
-
-Speech-to-text interview mode
-
-📌 Why This Project Matters
-
-This project demonstrates not only NLP implementation but also system design thinking, software engineering practices, and the ability to build end-to-end AI-driven applications.
+## 📂 Project Structure
+AI-Interview-Prep-Tool/
+│
+├── app/
+│ ├── evaluator.py # NLP evaluation logic
+│ ├── session.py # Interview session management
+│
+├── data/
+│ ├── questions.csv # Question bank with keywords
+│
+├── static/
+│ ├── index.html # Landing page
+│ ├── interview.html # Interview UI
+│ ├── analysis.html # Analytics dashboard
+│
+├── main.py # FastAPI entry point
 
 
-Note:Interview reports (PDF & JSON) are generated locally in the outputs/ directory and are intentionally excluded from version control.
+---
+
+## 🧪 Sample Evaluation Output
+
+```json
+{
+  "score": 53.8,
+  "confidence": 66.03,
+  "keyword_match": 37.5,
+  "matched_keywords": ["mean", "median", "average"],
+  "missing_keywords": ["central tendency", "skew", "outliers"],
+  "feedback": "Partial understanding. Add more detail."
+}
