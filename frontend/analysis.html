@@ -174,7 +174,7 @@
 </div>
 <p class="font-manrope uppercase text-[10px] tracking-widest text-on-surface-variant mb-4">Overall Score</p>
 <div class="flex items-baseline gap-2">
-<span class="font-headline font-bold text-6xl text-primary">88</span>
+<span id="overall-score" class="font-headline font-bold text-6xl text-primary">0</span>
 <span class="text-on-surface-variant text-xl">/100</span>
 </div>
 <div class="mt-6 h-1 w-full bg-surface-container-low rounded-full">
@@ -188,7 +188,7 @@
 </div>
 <p class="font-manrope uppercase text-[10px] tracking-widest text-on-surface-variant mb-4">AI Confidence Level</p>
 <div class="flex items-baseline gap-2">
-<span class="font-headline font-bold text-6xl text-secondary">94</span>
+<span id="confidence-score" class="font-headline font-bold text-6xl text-secondary">0</span>
 <span class="text-on-surface-variant text-xl">%</span>
 </div>
 <div class="mt-6 flex gap-1">
@@ -206,7 +206,7 @@
 </div>
 <p class="font-manrope uppercase text-[10px] tracking-widest text-on-surface-variant mb-4">Keyword Match %</p>
 <div class="flex items-baseline gap-2">
-<span class="font-headline font-bold text-6xl text-on-surface">72</span>
+<span id="keyword-score" class="font-headline font-bold text-6xl text-on-surface">0</span>
 <span class="text-on-surface-variant text-xl">%</span>
 </div>
 <p class="text-[10px] text-on-surface-variant mt-6 uppercase tracking-widest">Semantic Overlap: <span class="text-secondary">High</span></p>
@@ -280,17 +280,16 @@
 </div>
 <!-- Sidebar Keyword Section -->
 <div class="lg:col-span-4 flex flex-col gap-6">
-<!-- Matched Keywords -->
 <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 flex-1">
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-<h3 class="font-headline font-bold text-lg text-on-surface">Matched Keywords</h3>
-</div>
-<div class="flex flex-wrap gap-2">
-<div id="matched-keywords"></div>
-</div>
-<div class="mt-8 pt-6 border-t border-outline-variant/10">
-</div>
+  
+  <div class="flex items-center gap-2 mb-6">
+    <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+    <h3 class="font-headline font-bold text-lg text-on-surface">Matched Keywords</h3>
+  </div>
+
+  <!-- ✅ ONLY ONE DIV -->
+  <div id="matched-keywords" class="flex flex-wrap gap-2"></div>
+
 </div>
 <!-- Missing Keywords -->
 <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10 flex-1">
@@ -298,7 +297,7 @@
 <span class="material-symbols-outlined text-error">warning</span>
 <h3 class="font-headline font-bold text-lg text-on-surface">Missing Keywords</h3>
 </div>
-<div class="flex flex-wrap gap-2">
+<div id="missing-keywords" class="flex flex-wrap gap-2"></div>
 
 </div>
 <div class="mt-8 pt-6 border-t border-outline-variant/10">
@@ -313,7 +312,7 @@
 <span class="material-symbols-outlined text-primary text-3xl">lightbulb</span>
 <div>
 <h4 class="font-headline font-bold text-on-surface text-sm uppercase tracking-widest">Synthetic Insight</h4>
-<p class="text-on-surface-variant text-xs mt-1">"The candidate's problem-solving approach is highly unconventional yet logically sound. Recommend deep-dive on legacy migration strategies during the CTO final round."</p>
+<p class="text-on-surface-variant text-xs mt-1">"AI mock interview platform with NLP-based answer evaluation, real-time scoring, and visual performance insights."</p>
 </div>
 </div>
 </div>
@@ -323,37 +322,117 @@
 window.onload = function () {
     const data = JSON.parse(localStorage.getItem("analysis_data"));
 
+    console.log("DATA:", data);
+    renderCharts(data);
+
     if (!data) {
         alert("No data found");
         return;
     }
 
-    // 🟢 MAP DATA TO UI
+    // ✅ Scores
+    document.getElementById("overall-score").innerText = data.score || 0;
+    document.getElementById("confidence-score").innerText = data.confidence || 0;
+    document.getElementById("keyword-score").innerText = data.keyword_match || 0;
 
-    // Overall Score
-    document.querySelector(".text-6xl.text-primary").innerText = data.score;
+    // ✅ Matched keywords
+    const matched = document.getElementById("matched-keywords");
 
-    // AI Confidence (example logic)
-    const confidence = data.confidence || 85;
-    document.querySelector(".text-6xl.text-secondary").innerText = confidence;
+if (!matched) {
+    console.error("Matched container NOT FOUND");
+} else {
+    matched.innerHTML = "";
 
-    // Keyword Match %
-    const keywordMatch = data.keyword_match || 70;
-    document.querySelector(".text-6xl.text-on-surface").innerText = keywordMatch;
+    console.log("MATCHED:", data.matched_keywords);
 
-    // Missing Keywords
-    const missingContainer = document.querySelectorAll(".flex.flex-wrap.gap-2")[1];
-    missingContainer.innerHTML = "";
-
-    data.missing_keywords.forEach(k => {
+    (data.matched_keywords || []).forEach(k => {
         const span = document.createElement("span");
-        span.className = "px-3 py-1 bg-error-container/40 text-error rounded-full text-[10px] font-bold uppercase tracking-wider";
         span.innerText = k;
-        missingContainer.appendChild(span);
-    });
+        span.style.padding = "6px 10px";
+        span.style.background = "#22c55e";
+        span.style.borderRadius = "999px";
+        span.style.margin = "4px";
+        span.style.display = "inline-block";
 
-    // Synthetic Insight
-    document.querySelector(".text-xs.mt-1").innerText = data.feedback;
+        matched.appendChild(span);
+    });
+}
+
+    // ✅ Missing keywords
+    const missing = document.getElementById("missing-keywords");
+    missing.innerHTML = "";
+
+    (data.missing_keywords || []).forEach(k => {
+        const span = document.createElement("span");
+        span.className = "px-3 py-1 bg-red-500 text-white rounded-full text-xs";
+        span.innerText = k;
+        missing.appendChild(span);
+    });
 };
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div class="mt-6">
+  <canvas id="radarChart"></canvas>
+</div>
+
+<div class="mt-6">
+  <canvas id="barChart"></canvas>
+</div>
+<script>
+function renderCharts(data) {
+    const radarCtx = document.getElementById("radarChart");
+
+    new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Tech', 'Problem', 'Communication', 'Role', 'Culture'],
+            datasets: [{
+                label: 'Performance',
+                data: [92, 78, 84, 65, 88], // replace with dynamic later
+                borderWidth: 2
+            }]
+        }
+    });
+
+    const barCtx = document.getElementById("barChart");
+
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Score', 'Confidence', 'Keyword Match'],
+            datasets: [{
+                label: 'Metrics',
+                data: [
+                    data.score,
+                    data.confidence,
+                    data.keyword_match
+                ]
+            }]
+        }
+    });
+}
+</script>
+
+<script>
+async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+
+    const element = document.body; // or specific div
+
+    const canvas = await html2canvas(element);
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save("Interview_Report.pdf");
+}
+</script>
+<button onclick="exportPDF()">EXPORT PDF</button>
 </body></html>
