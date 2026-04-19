@@ -77,25 +77,25 @@ def evaluate_answer(user_answer, ideal_answer, keywords):
     matched, missed = keyword_match_details(user_answer, keywords)
 
     # Confidence (based on consistency of scoring signals)
-    confidence = 100 - abs(similarity - keyword_score)
-    confidence = max(50, min(confidence, 100))  # clamp
+    confidence = (0.7 * similarity) + (0.3 * keyword_score)
+
+    if keyword_score >= 60:
+        confidence = max(confidence, 65)
 
 
     if keyword_score >= 60:
         final_score = max(final_score, 60)
 
 
-    # Balanced scoring
-    base_score = (0.5 * similarity) + (0.5 * keyword_score)
+    base_score = (0.4 * similarity) + (0.6 * keyword_score)
 
-    # Prevent collapse
+    # prevent semantic mismatch penalty
     final_score = max(base_score, keyword_score)
 
-    # Strong concept boost
+    # boost for strong keyword coverage
     if keyword_score >= 60:
         final_score = max(final_score, 70)
 
-    # Cap
     final_score = min(final_score, 100)
 
     # Feedback generation
